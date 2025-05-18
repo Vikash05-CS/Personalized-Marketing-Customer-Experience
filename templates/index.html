@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Personalized Marketing & Customer Experience</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .user-info {
+            margin-bottom: 25px;
+        }
+        .user-info h3 {
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        .nav-links {
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        .nav-links a {
+            color: #4CAF50;
+            text-decoration: none;
+            margin-left: 15px;
+            font-weight: 600;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        .chatbox {
+            border: 1px solid #ddd;
+            padding: 15px;
+            width: 100%;
+            height: 350px;
+            overflow-y: auto;
+            background-color: #fafafa;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .chat-input {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input input[type="text"] {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        .chat-input button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .chat-input button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 15px;
+            max-width: 75%;
+            word-wrap: break-word;
+        }
+        .user-message {
+            background-color: #d1e7fd;
+            color: #0b3d91;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .bot-message {
+            background-color: #e2f0d9;
+            color: #3a6b35;
+            align-self: flex-start;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome, {{ user.name }}!</h1>
+    <div class="user-info">
+        <h3>Your Preferences:</h3>
+        <ul>
+            {% for pref in user.preferences %}
+            <li>{{ pref }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div>
+        <a href="{{ url_for('product_list') }}">View Products</a> |
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+
+    <h3>Chatbot</h3>
+    <div class="chatbox" id="chatbox"></div>
+    <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Type your message here..." style="width: 300px;" />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const chatbox = document.getElementById('chatbox');
+        const userInput = document.getElementById('userInput');
+
+        function appendMessage(message, className) {
+            const msgDiv = document.createElement('div');
+            msgDiv.textContent = message;
+            msgDiv.className = 'message ' + className;
+            chatbox.appendChild(msgDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            appendMessage('You: ' + message, 'user-message');
+            userInput.value = '';
+
+            fetch('/chatbot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                appendMessage('Bot: ' + data.response, 'bot-message');
+            })
+            .catch(() => {
+                appendMessage('Bot: Sorry, there was an error.', 'bot-message');
+            });
+        }
+
+        // Send message on Enter key press
+        userInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Greet user on load
+        window.onload = () => {
+            appendMessage('Bot: Hello! I am your personalized assistant. How can I help you today?', 'bot-message');
+        };
+    </script>
+</body>
+</html>
